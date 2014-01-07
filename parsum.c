@@ -2,7 +2,6 @@
 
 #define PROGRAM_FILE "parsum.cl"
 #define KERNEL_FUNC "parsum"
-#define ARRAY_SIZE 64
 
 #include <math.h>
 #include <stdio.h>
@@ -101,9 +100,7 @@ int main(int argc, char *argv[]) {
     long long int start_index = atoll(argv[1]);
     long long int end_index = atoll(argv[2]);
     
-    printf("start_index: %lli end_index: %lli\n", start_index, end_index);
-    
-    //long long int ARRAY_SIZE = end_index;
+    printf("start_index: %lli end_index: %lli\n\n", start_index, end_index);
 
    /* OpenCL structures */
    cl_device_id device;
@@ -115,13 +112,13 @@ int main(int argc, char *argv[]) {
    size_t local_size, global_size;
 
    /* Data and buffers */
-   float data[ARRAY_SIZE];
+   float data[end_index];
    float sum[2], total, actual_sum;
    cl_mem input_buffer, sum_buffer;
    cl_int num_groups;
 
    /* Initialize data */
-   for(i=0; i<ARRAY_SIZE; i++) {
+   for(i=0; i<end_index; i++) {
       data[i] = 1.0f*i;
    }
 
@@ -137,11 +134,11 @@ int main(int argc, char *argv[]) {
    program = build_program(context, device, PROGRAM_FILE);
 
    /* Create data buffer */
-   global_size = 8;
-   local_size = 4;
+   global_size = 512;
+   local_size = 256;
    num_groups = global_size/local_size;
    input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
-         CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data, &err);
+         CL_MEM_COPY_HOST_PTR, end_index * sizeof(float), data, &err);
    sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
          CL_MEM_COPY_HOST_PTR, num_groups * sizeof(float), sum, &err);
    if(err < 0) {
@@ -193,8 +190,9 @@ int main(int argc, char *argv[]) {
    for(j=0; j<num_groups; j++) {
       total += sum[j];
    }
-   actual_sum = 1.0f * ARRAY_SIZE/2*(ARRAY_SIZE-1);
+   actual_sum = 1.0f * end_index/2*(end_index-1);
    printf("Computed sum = %.1f.\n", total);
+   printf("Checksum = %.1f.\n", actual_sum);
    if(fabs(total - actual_sum) > 0.01*fabs(actual_sum))
       printf("Check failed.\n");
    else
