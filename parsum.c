@@ -134,8 +134,8 @@ int main(int argc, char *argv[]) {
    program = build_program(context, device, PROGRAM_FILE);
 
    /* Create data buffer */
-   global_size = 512;
-   local_size = 256;
+   global_size = end_index/8;
+   local_size = end_index/16;
    num_groups = global_size/local_size;
    input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
          CL_MEM_COPY_HOST_PTR, end_index * sizeof(float), data, &err);
