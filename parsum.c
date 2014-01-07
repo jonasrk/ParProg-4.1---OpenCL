@@ -94,7 +94,16 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
    return program;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    
+   /* Parsing commandline arguments */
+    
+    long long int start_index = atoll(argv[1]);
+    long long int end_index = atoll(argv[2]);
+    
+    printf("start_index: %lli end_index: %lli\n", start_index, end_index);
+    
+    //long long int ARRAY_SIZE = end_index;
 
    /* OpenCL structures */
    cl_device_id device;
