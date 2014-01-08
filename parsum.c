@@ -151,6 +151,8 @@ int main(int argc, char *argv[]) {
     printf("\nlocal_size: %lu\n", local_size);
    num_groups = global_size/local_size;
     
+    printf("\nnum_groups: %i\n", num_groups);
+    
     input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
                                   CL_MEM_COPY_HOST_PTR, end_index * sizeof(float), data, &err);
     sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
@@ -202,10 +204,11 @@ int main(int argc, char *argv[]) {
    /* Check result */
    total = 0.0f;
    for(j=0; j<num_groups; j++) {
+       printf("\n sum of group %i is %f\n", j, sum[j]);
       total += sum[j];
    }
    actual_sum = 1.0f * end_index/2*(end_index-1);
-   printf("Computed sum = %.1f.\n", total);
+   printf("\nComputed sum = %.1f.\n", total);
    printf("Checksum = %.1f.\n", actual_sum);
    if(fabs(total - actual_sum) > 0.01*fabs(actual_sum))
       printf("Check failed.\n");
