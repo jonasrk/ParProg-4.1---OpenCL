@@ -3,6 +3,9 @@
 __kernel void parsum(__global float4* data,
       __local float* local_result, __global float* group_result) {
 
+//    int my_index = get_global_id(0);
+//    group_result[get_group_id(0)] = my_index;
+    
    float sum;
    float4 input1, input2, sum_vector;
    uint global_addr, local_addr;
