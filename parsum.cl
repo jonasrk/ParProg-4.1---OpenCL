@@ -17,7 +17,7 @@ __kernel void parsum(__global float4* data,
 
    local_addr = get_local_id(0);
    local_result[local_addr] = sum_vector.s0 + sum_vector.s1 + 
-                              sum_vector.s2 + sum_vector.s3; 
+                              sum_vector.s2 + sum_vector.s3;
    barrier(CLK_LOCAL_MEM_FENCE);
 
    if(get_local_id(0) == 0) {

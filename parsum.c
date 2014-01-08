@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
     printf("number_of_work_items: %i \n\n", number_of_work_items);
     
    
-   float sum[2], total, actual_sum;
+   float sum[4], total, actual_sum;
    cl_mem input_buffer, sum_buffer;
    cl_int num_groups;
 
