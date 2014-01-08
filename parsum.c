@@ -112,13 +112,24 @@ int main(int argc, char *argv[]) {
    size_t local_size, global_size;
 
    /* Data and buffers */
-   float data[256*8];
+    int number_of_work_items = end_index/8 + (end_index % 8 == 0 ? 0 : 1);
+    number_of_work_items += ( number_of_work_items % 4 == 0 ? 0 : 4 - number_of_work_items % 4 );
+    
+    printf("number_of_work_items: %i \n\n", number_of_work_items);
+    
+   
    float sum[2], total, actual_sum;
    cl_mem input_buffer, sum_buffer;
    cl_int num_groups;
 
    /* Initialize data */
-   for(i=0; i<256*8; i++) {
+    
+    global_size = number_of_work_items;
+    global_size += (global_size % 8 == 0 ? 0 : 8 - (global_size % 8));
+    
+    float data[global_size*8];
+    
+    for(i=0; i<(global_size*8); i++) {
        data[i] = (i < end_index ? 1.0f*i : 0.0f);
    }
 
@@ -134,9 +145,9 @@ int main(int argc, char *argv[]) {
    program = build_program(context, device, PROGRAM_FILE);
 
    /* Create data buffer */
-    global_size = 256;
+    
     printf("\nglobal_size: %lu\n", global_size);
-   local_size = 128;
+   local_size = 4;
     printf("\nlocal_size: %lu\n", local_size);
    num_groups = global_size/local_size;
     
