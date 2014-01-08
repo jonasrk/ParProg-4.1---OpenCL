@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
     printf("number_of_work_items: %i \n\n", number_of_work_items);
     
    
-   float sum[4], total, actual_sum;
+   float  total, actual_sum;
    cl_mem input_buffer, sum_buffer;
    cl_int num_groups;
 
@@ -150,6 +150,7 @@ int main(int argc, char *argv[]) {
    local_size = 4;
     printf("\nlocal_size: %lu\n", local_size);
    num_groups = global_size/local_size;
+    float sum[num_groups];
     
     printf("\nnum_groups: %i\n", num_groups);
     
@@ -204,7 +205,7 @@ int main(int argc, char *argv[]) {
    /* Check result */
    total = 0.0f;
    for(j=0; j<num_groups; j++) {
-       printf("\n sum of group %i is %f\n", j, sum[j]);
+//       printf("\n sum of group %i is %f\n", j, sum[j]);
       total += sum[j];
    }
    actual_sum = 1.0f * end_index/2*(end_index-1);
