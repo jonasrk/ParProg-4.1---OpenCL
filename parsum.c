@@ -112,14 +112,14 @@ int main(int argc, char *argv[]) {
    size_t local_size, global_size;
 
    /* Data and buffers */
-   float data[end_index];
+   float data[256*8];
    float sum[2], total, actual_sum;
    cl_mem input_buffer, sum_buffer;
    cl_int num_groups;
 
    /* Initialize data */
-   for(i=0; i<end_index; i++) {
-      data[i] = 1.0f*i;
+   for(i=0; i<256*8; i++) {
+       data[i] = (i < end_index ? 1.0f*i : 0.0f);
    }
 
    /* Create device and context */
@@ -134,13 +134,16 @@ int main(int argc, char *argv[]) {
    program = build_program(context, device, PROGRAM_FILE);
 
    /* Create data buffer */
-   global_size = end_index/8;
-   local_size = end_index/16;
+    global_size = 256;
+    printf("\nglobal_size: %lu\n", global_size);
+   local_size = 128;
+    printf("\nlocal_size: %lu\n", local_size);
    num_groups = global_size/local_size;
-   input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
-         CL_MEM_COPY_HOST_PTR, end_index * sizeof(float), data, &err);
-   sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
-         CL_MEM_COPY_HOST_PTR, num_groups * sizeof(float), sum, &err);
+    
+    input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
+                                  CL_MEM_COPY_HOST_PTR, end_index * sizeof(float), data, &err);
+    sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
+                                CL_MEM_COPY_HOST_PTR, num_groups * sizeof(float), sum, &err);
    if(err < 0) {
       perror("Couldn't create a buffer");
       exit(1);   
@@ -170,8 +173,8 @@ int main(int argc, char *argv[]) {
    }
 
    /* Enqueue kernel */
-   err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, 
-         &local_size, 0, NULL, NULL); 
+    err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size,
+                                 &local_size, 0, NULL, NULL);
    if(err < 0) {
       perror("Couldn't enqueue the kernel");
       exit(1);
