@@ -147,10 +147,10 @@ int main(int argc, char *argv[]) {
     unsigned long final_sum = 0;
     unsigned long amount_of_numbers_to_add_including_zero = end_index + 1;
     unsigned long actual_sum;
-    int components_of_vector_type = 4;
+    int components_of_vector_type = 8;
     int components_per_work_item = components_of_vector_type * 2;
     int work_group_size = 4;
-    unsigned long  number_of_work_items_per_cycle = 8092 * work_group_size ;
+    unsigned long  number_of_work_items_per_cycle = 4096 * work_group_size ; // 32768 segfault on my system
     unsigned long components_per_cycle = number_of_work_items_per_cycle * components_per_work_item;
     
     

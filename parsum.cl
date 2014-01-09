@@ -1,13 +1,13 @@
 //taken from http://www.drdobbs.com/parallel/a-gentle-introduction-to-opencl/231002854?pgno=3 and modified
 
-__kernel void parsum(__global ulong4* data,
+__kernel void parsum(__global ulong8* data,
                      __local unsigned long * local_result, __global unsigned long * group_result) {
     
     //    int my_index = get_global_id(0);
     //    group_result[get_group_id(0)] = my_index;
     
     unsigned long  sum;
-    ulong4 input1, input2, sum_vector;
+    ulong8 input1, input2, sum_vector;
     uint global_addr, local_addr;
     
     global_addr = get_global_id(0) * 2;
@@ -17,7 +17,7 @@ __kernel void parsum(__global ulong4* data,
     
     local_addr = get_local_id(0);
     local_result[local_addr] = sum_vector.s0 + sum_vector.s1 +
-    sum_vector.s2 + sum_vector.s3;
+    sum_vector.s2 + sum_vector.s3 + sum_vector.s4 + sum_vector.s5 + sum_vector.s6 + sum_vector.s7;
     barrier(CLK_LOCAL_MEM_FENCE);
     
     if(get_local_id(0) == 0) {
