@@ -183,7 +183,6 @@ int main(int argc, char *argv[]) {
         /* Initialize data */
         
         global_size = number_of_work_items_per_cycle;
-        global_size += (global_size % components_per_work_item == 0 ? 0 : components_per_work_item - (global_size % components_per_work_item));
         
         // printf("\nDebug B\n");
         
