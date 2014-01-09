@@ -97,10 +97,10 @@ int main(int argc, char *argv[]) {
     
    /* Parsing commandline arguments */
     
-    long long int start_index = atoll(argv[1]);
-    long long int end_index = atoll(argv[2]);
+    int start_index = atoi(argv[1]);
+    int end_index = atoi(argv[2]);
     
-    printf("start_index: %lli end_index: %lli\n\n", start_index, end_index);
+    printf("start_index: %i end_index: %i\n\n", start_index, end_index);
 
    /* OpenCL structures */
    cl_device_id device;
@@ -112,13 +112,13 @@ int main(int argc, char *argv[]) {
    size_t local_size, global_size;
 
    /* Data and buffers */
-    int number_of_work_items = end_index/8 + (end_index % 8 == 0 ? 0 : 1);
+    int  number_of_work_items = end_index/8 + (end_index % 8 == 0 ? 0 : 1);
     number_of_work_items += ( number_of_work_items % 4 == 0 ? 0 : 4 - number_of_work_items % 4 );
     
     printf("number_of_work_items: %i \n\n", number_of_work_items);
     
    
-   float  total, actual_sum;
+   int   total, actual_sum;
    cl_mem input_buffer, sum_buffer;
    cl_int num_groups;
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
     global_size = number_of_work_items;
     global_size += (global_size % 8 == 0 ? 0 : 8 - (global_size % 8));
     
-    float data[global_size*8];
+    int data[global_size*8];
     
     for(i=0; i<(global_size*8); i++) {
        data[i] = (i < end_index ? 1.0f*i : 0.0f);
@@ -150,14 +150,14 @@ int main(int argc, char *argv[]) {
    local_size = 4;
     printf("\nlocal_size: %lu\n", local_size);
    num_groups = global_size/local_size;
-    float sum[num_groups];
+    int sum[num_groups];
     
     printf("\nnum_groups: %i\n", num_groups);
     
     input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
-                                  CL_MEM_COPY_HOST_PTR, end_index * sizeof(float), data, &err);
+                                  CL_MEM_COPY_HOST_PTR, end_index * sizeof(int ), data, &err);
     sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
-                                CL_MEM_COPY_HOST_PTR, num_groups * sizeof(float), sum, &err);
+                                CL_MEM_COPY_HOST_PTR, num_groups * sizeof(int ), sum, &err);
    if(err < 0) {
       perror("Couldn't create a buffer");
       exit(1);   
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
 
    /* Create kernel arguments */
    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_buffer);
-   err |= clSetKernelArg(kernel, 1, local_size * sizeof(float), NULL);
+   err |= clSetKernelArg(kernel, 1, local_size * sizeof(int ), NULL);
    err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &sum_buffer);
    if(err < 0) {
       perror("Couldn't create a kernel argument");
@@ -209,9 +209,9 @@ int main(int argc, char *argv[]) {
       total += sum[j];
    }
    actual_sum = 1.0f * end_index/2*(end_index-1);
-   printf("\nComputed sum = %.1f.\n", total);
-   printf("Checksum = %.1f.\n", actual_sum);
-   if(fabs(total - actual_sum) > 0.01*fabs(actual_sum))
+   printf("\nComputed sum = %i\n", total);
+   printf("Checksum = %i.\n", actual_sum);
+   if(total != actual_sum)
       printf("Check failed.\n");
    else
       printf("Check passed.\n");
