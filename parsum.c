@@ -150,8 +150,10 @@ int main(int argc, char *argv[]) {
     int components_of_vector_type = 4;
     int components_per_work_item = components_of_vector_type * 2;
     int work_group_size = 4;
-    int cycle_amount = 4062 * work_group_size * components_per_work_item;
+    int cycle_amount = 2048 * work_group_size * components_per_work_item;
     unsigned long  number_of_work_items_per_cycle = cycle_amount/components_per_work_item;
+    unsigned long  components_per_cycle = cycle_amount*components_per_work_item;
+    
     
     
     
@@ -186,11 +188,11 @@ int main(int argc, char *argv[]) {
         
         // printf("\nDebug B\n");
         
-        unsigned long data[cycle_amount*components_per_work_item];
+        unsigned long data[components_per_cycle];
         
         // printf("\nDebug B.1\n");
         
-        for(i=0; i<cycle_amount*components_per_work_item; i++) {
+        for(i=0; i<components_per_cycle; i++) {
             data[i] = (i + cycle*cycle_amount < amount_of_numbers_to_add_including_zero ? i + cycle*cycle_amount : 0.0f);
         }
         
@@ -199,7 +201,7 @@ int main(int argc, char *argv[]) {
         /* Create device and context */
         device = create_device();
         
-        print_device_info(device);
+//        print_device_info(device);
         
         context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
         if(err < 0) {
