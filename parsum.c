@@ -99,6 +99,7 @@ int main(int argc, char *argv[]) {
     
     unsigned long start_index = atol(argv[1]);
     unsigned long end_index = atol(argv[2]);
+    unsigned long amount_of_numbers_to_add_including_zero = end_index + 1;
     
     printf("start_index: %ld end_index: %ld\n\n", start_index, end_index);
 
@@ -112,7 +113,7 @@ int main(int argc, char *argv[]) {
    size_t local_size, global_size;
 
    /* Data and buffers */
-    unsigned long  number_of_work_items = end_index/8 + (end_index % 8 == 0 ? 0 : 1);
+    unsigned long  number_of_work_items = amount_of_numbers_to_add_including_zero/8 + (amount_of_numbers_to_add_including_zero % 8 == 0 ? 0 : 1);
     number_of_work_items += ( number_of_work_items % 4 == 0 ? 0 : 4 - number_of_work_items % 4 );
     
     printf("number_of_work_items: %ld \n\n", number_of_work_items);
@@ -130,7 +131,7 @@ int main(int argc, char *argv[]) {
     unsigned long data[global_size*8];
     
     for(i=0; i<(global_size*8); i++) {
-       data[i] = (i < end_index ? 1.0f*i : 0.0f);
+       data[i] = (i < amount_of_numbers_to_add_including_zero ? i : 0.0f);
    }
 
    /* Create device and context */
@@ -155,7 +156,7 @@ int main(int argc, char *argv[]) {
     printf("\nnum_groups: %i\n", num_groups);
     
     input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
-                                  CL_MEM_COPY_HOST_PTR, end_index * sizeof(unsigned long ), data, &err);
+                                  CL_MEM_COPY_HOST_PTR, amount_of_numbers_to_add_including_zero * sizeof(unsigned long ), data, &err);
     sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
                                 CL_MEM_COPY_HOST_PTR, num_groups * sizeof(unsigned long ), sum, &err);
    if(err < 0) {
@@ -163,20 +164,23 @@ int main(int argc, char *argv[]) {
       exit(1);   
    };
 
+    printf("\nDebug 1\n");
+    
    /* Create a command queue */
    queue = clCreateCommandQueue(context, device, 0, &err);
+    printf("\nDebug 1.1\n");
    if(err < 0) {
       perror("Couldn't create a command queue");
       exit(1);   
    };
-
+    printf("\nDebug 2\n");
    /* Create a kernel */
    kernel = clCreateKernel(program, KERNEL_FUNC, &err);
    if(err < 0) {
       perror("Couldn't create a kernel");
       exit(1);
    };
-
+    printf("\nDebug 3\n");
    /* Create kernel arguments */
    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_buffer);
    err |= clSetKernelArg(kernel, 1, local_size * sizeof(int ), NULL);
@@ -185,7 +189,7 @@ int main(int argc, char *argv[]) {
       perror("Couldn't create a kernel argument");
       exit(1);
    }
-
+    printf("\nDebug 4\n");
    /* Enqueue kernel */
     err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size,
                                  &local_size, 0, NULL, NULL);
@@ -193,7 +197,7 @@ int main(int argc, char *argv[]) {
       perror("Couldn't enqueue the kernel");
       exit(1);
    }
-
+    printf("\nDebug 5\n");
    /* Read the kernel's output */
    err = clEnqueueReadBuffer(queue, sum_buffer, CL_TRUE, 0, 
          sizeof(sum), sum, 0, NULL, NULL);
@@ -201,20 +205,25 @@ int main(int argc, char *argv[]) {
       perror("Couldn't read the buffer");
       exit(1);
    }
-
+    printf("\nDebug 6\n");
    /* Check result */
    total = 0;
    for(j=0; j<num_groups; j++) {
 //       printf("\n sum of group %i is %f\n", j, sum[j]);
       total += sum[j];
    }
-   actual_sum = 1 * end_index/2*(end_index-1);
+    actual_sum = (end_index)/2*(end_index+1) + (end_index % 2 == 0 ? 0 : end_index/2 + 1);
    printf("\nComputed sum = %ld\n", total);
    printf("Checksum = %ld\n", actual_sum);
    if(total != actual_sum)
       printf("Check failed.\n");
    else
       printf("Check passed.\n");
+    
+    FILE * Output;
+	Output = fopen("output.txt", "a");
+	fprintf(Output, "%ld", total);
+	fclose(Output);
 
    /* Deallocate resources */
    clReleaseKernel(kernel);
