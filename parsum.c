@@ -93,6 +93,51 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
     return program;
 }
 
+void print_device_info(cl_device_id dev){
+    
+    // taken from http://dhruba.name/2012/08/14/opencl-cookbook-listing-all-devices-and-their-critical-attributes/
+    
+    int j = 0;
+    char* value;
+    size_t valueSize;
+    cl_uint maxComputeUnits;
+    
+    // print device name
+    clGetDeviceInfo(dev, CL_DEVICE_NAME, 0, NULL, &valueSize);
+    value = (char*) malloc(valueSize);
+    clGetDeviceInfo(dev, CL_DEVICE_NAME, valueSize, value, NULL);
+    printf("%d. Device: %s\n", j+1, value);
+    free(value);
+    
+    // print hardware device version
+    clGetDeviceInfo(dev, CL_DEVICE_VERSION, 0, NULL, &valueSize);
+    value = (char*) malloc(valueSize);
+    clGetDeviceInfo(dev, CL_DEVICE_VERSION, valueSize, value, NULL);
+    printf(" %d.%d Hardware version: %s\n", j+1, 1, value);
+    free(value);
+    
+    // print software driver version
+    clGetDeviceInfo(dev, CL_DRIVER_VERSION, 0, NULL, &valueSize);
+    value = (char*) malloc(valueSize);
+    clGetDeviceInfo(dev, CL_DRIVER_VERSION, valueSize, value, NULL);
+    printf(" %d.%d Software version: %s\n", j+1, 2, value);
+    free(value);
+    
+    // print c version supported by compiler for device
+    clGetDeviceInfo(dev, CL_DEVICE_OPENCL_C_VERSION, 0, NULL, &valueSize);
+    value = (char*) malloc(valueSize);
+    clGetDeviceInfo(dev, CL_DEVICE_OPENCL_C_VERSION, valueSize, value, NULL);
+    printf(" %d.%d OpenCL C version: %s\n", j+1, 3, value);
+    free(value);
+    
+    // print parallel compute units
+    clGetDeviceInfo(dev, CL_DEVICE_MAX_COMPUTE_UNITS,
+                    sizeof(maxComputeUnits), &maxComputeUnits, NULL);
+    printf(" %d.%d Parallel compute units: %d\n", j+1, 4, maxComputeUnits);
+
+    
+}
+
 int main(int argc, char *argv[]) {
     
     /* Parsing commandline arguments */
@@ -102,7 +147,10 @@ int main(int argc, char *argv[]) {
     unsigned long final_sum = 0;
     unsigned long amount_of_numbers_to_add_including_zero = end_index + 1;
     unsigned long actual_sum;
-    int cycle_amount = 130000; //130500 and larger lead to segfault on my system
+    int components_of_vector_type = 4;
+    int components_per_work_item = components_of_vector_type * 2;
+    int work_group_size = 4;
+    int cycle_amount = 32500 * work_group_size; //32625 and larger lead to segfault on my system
     
     
     
@@ -120,8 +168,8 @@ int main(int argc, char *argv[]) {
         size_t local_size, global_size;
         
         /* Data and buffers */
-        unsigned long  number_of_work_items = cycle_amount/8 + (cycle_amount % 8 == 0 ? 0 : 1);
-        number_of_work_items += ( number_of_work_items % 4 == 0 ? 0 : 4 - number_of_work_items % 4 );
+        unsigned long  number_of_work_items = cycle_amount/components_per_work_item + (cycle_amount % components_per_work_item == 0 ? 0 : 1);
+        number_of_work_items += ( number_of_work_items % components_of_vector_type == 0 ? 0 : components_of_vector_type - number_of_work_items % components_of_vector_type );
         
         // printf("number_of_work_items: %ld \n\n", number_of_work_items);
         
@@ -135,15 +183,15 @@ int main(int argc, char *argv[]) {
         /* Initialize data */
         
         global_size = number_of_work_items;
-        global_size += (global_size % 8 == 0 ? 0 : 8 - (global_size % 8));
+        global_size += (global_size % components_per_work_item == 0 ? 0 : components_per_work_item - (global_size % components_per_work_item));
         
         // printf("\nDebug B\n");
         
-        unsigned long data[cycle_amount*8];
+        unsigned long data[cycle_amount*components_per_work_item];
         
         // printf("\nDebug B.1\n");
         
-        for(i=0; i<cycle_amount*8; i++) {
+        for(i=0; i<cycle_amount*components_per_work_item; i++) {
             data[i] = (i + cycle*cycle_amount < amount_of_numbers_to_add_including_zero ? i + cycle*cycle_amount : 0.0f);
         }
         
@@ -151,11 +199,16 @@ int main(int argc, char *argv[]) {
         // printf("\nDebug C\n");
         /* Create device and context */
         device = create_device();
+        
+        print_device_info(device);
+        
         context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
         if(err < 0) {
             perror("Couldn't create a context");
             exit(1);
         }
+        
+        
         
         /* Build program */
         program = build_program(context, device, PROGRAM_FILE);
@@ -163,7 +216,7 @@ int main(int argc, char *argv[]) {
         /* Create data buffer */
         
         // printf("\nglobal_size: %lu\n", global_size);
-        local_size = 4;
+        local_size = work_group_size;
         // printf("\nlocal_size: %lu\n", local_size);
         num_groups = global_size/local_size;
         unsigned long sum[num_groups];
