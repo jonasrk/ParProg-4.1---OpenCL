@@ -150,13 +150,14 @@ int main(int argc, char *argv[]) {
     int components_of_vector_type = 4;
     int components_per_work_item = components_of_vector_type * 2;
     int work_group_size = 4;
-    int cycle_amount = 32500 * work_group_size; //32625 and larger lead to segfault on my system
+    int cycle_amount = 4062 * work_group_size * components_per_work_item;
+    unsigned long  number_of_work_items_per_cycle = cycle_amount/components_per_work_item;
     
     
     
     // printf("start_index: %ld end_index: %ld\n\n", start_index, end_index);
     
-    for (int cycle = 0; cycle < amount_of_numbers_to_add_including_zero / cycle_amount + 1; cycle ++) {
+    for (int cycle = 0; cycle <= amount_of_numbers_to_add_including_zero / cycle_amount; cycle ++) {
         
         /* OpenCL structures */
         cl_device_id device;
@@ -168,10 +169,9 @@ int main(int argc, char *argv[]) {
         size_t local_size, global_size;
         
         /* Data and buffers */
-        unsigned long  number_of_work_items = cycle_amount/components_per_work_item + (cycle_amount % components_per_work_item == 0 ? 0 : 1);
-        number_of_work_items += ( number_of_work_items % components_of_vector_type == 0 ? 0 : components_of_vector_type - number_of_work_items % components_of_vector_type );
+       
         
-        // printf("number_of_work_items: %ld \n\n", number_of_work_items);
+        // printf("number_of_work_items_per_cycle: %ld \n\n", number_of_work_items_per_cycle);
         
         
         unsigned long   total;
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
         
         /* Initialize data */
         
-        global_size = number_of_work_items;
+        global_size = number_of_work_items_per_cycle;
         global_size += (global_size % components_per_work_item == 0 ? 0 : components_per_work_item - (global_size % components_per_work_item));
         
         // printf("\nDebug B\n");
