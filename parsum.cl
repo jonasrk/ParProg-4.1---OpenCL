@@ -1,13 +1,13 @@
 //taken from http://www.drdobbs.com/parallel/a-gentle-introduction-to-opencl/231002854?pgno=3 and modified
 
-__kernel void parsum(__global int4* data,
-      __local int * local_result, __global int * group_result) {
+__kernel void parsum(__global long4* data,
+      __local long * local_result, __global long * group_result) {
 
 //    int my_index = get_global_id(0);
 //    group_result[get_group_id(0)] = my_index;
     
-   int  sum;
-   int4 input1, input2, sum_vector;
+   long  sum;
+   long4 input1, input2, sum_vector;
    uint global_addr, local_addr;
 
    global_addr = get_global_id(0) * 2;
