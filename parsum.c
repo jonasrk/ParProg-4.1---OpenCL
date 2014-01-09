@@ -97,8 +97,8 @@ int main(int argc, char *argv[]) {
     
    /* Parsing commandline arguments */
     
-    long start_index = atol(argv[1]);
-    long end_index = atol(argv[2]);
+    unsigned long start_index = atol(argv[1]);
+    unsigned long end_index = atol(argv[2]);
     
     printf("start_index: %ld end_index: %ld\n\n", start_index, end_index);
 
@@ -112,13 +112,13 @@ int main(int argc, char *argv[]) {
    size_t local_size, global_size;
 
    /* Data and buffers */
-    long  number_of_work_items = end_index/8 + (end_index % 8 == 0 ? 0 : 1);
+    unsigned long  number_of_work_items = end_index/8 + (end_index % 8 == 0 ? 0 : 1);
     number_of_work_items += ( number_of_work_items % 4 == 0 ? 0 : 4 - number_of_work_items % 4 );
     
     printf("number_of_work_items: %ld \n\n", number_of_work_items);
     
    
-   long   total, actual_sum;
+   unsigned long   total, actual_sum;
    cl_mem input_buffer, sum_buffer;
    cl_int num_groups;
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
     global_size = number_of_work_items;
     global_size += (global_size % 8 == 0 ? 0 : 8 - (global_size % 8));
     
-    long data[global_size*8];
+    unsigned long data[global_size*8];
     
     for(i=0; i<(global_size*8); i++) {
        data[i] = (i < end_index ? 1.0f*i : 0.0f);
@@ -150,14 +150,14 @@ int main(int argc, char *argv[]) {
    local_size = 4;
     printf("\nlocal_size: %lu\n", local_size);
    num_groups = global_size/local_size;
-    long sum[num_groups];
+    unsigned long sum[num_groups];
     
     printf("\nnum_groups: %i\n", num_groups);
     
     input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
-                                  CL_MEM_COPY_HOST_PTR, end_index * sizeof(long ), data, &err);
+                                  CL_MEM_COPY_HOST_PTR, end_index * sizeof(unsigned long ), data, &err);
     sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
-                                CL_MEM_COPY_HOST_PTR, num_groups * sizeof(long ), sum, &err);
+                                CL_MEM_COPY_HOST_PTR, num_groups * sizeof(unsigned long ), sum, &err);
    if(err < 0) {
       perror("Couldn't create a buffer");
       exit(1);   
