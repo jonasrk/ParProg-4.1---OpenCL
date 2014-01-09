@@ -134,7 +134,7 @@ void print_device_info(cl_device_id dev){
     clGetDeviceInfo(dev, CL_DEVICE_MAX_COMPUTE_UNITS,
                     sizeof(maxComputeUnits), &maxComputeUnits, NULL);
     printf(" %d.%d Parallel compute units: %d\n", j+1, 4, maxComputeUnits);
-
+    
     
 }
 
@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     
     /* Parsing commandline arguments */
     
-//    unsigned long start_index = atol(argv[1]);
+    //    unsigned long start_index = atol(argv[1]);
     unsigned long end_index = atol(argv[2]);
     unsigned long final_sum = 0;
     unsigned long amount_of_numbers_to_add_including_zero = end_index + 1;
@@ -150,16 +150,15 @@ int main(int argc, char *argv[]) {
     int components_of_vector_type = 4;
     int components_per_work_item = components_of_vector_type * 2;
     int work_group_size = 4;
-    int cycle_amount = 2048 * work_group_size * components_per_work_item;
-    unsigned long  number_of_work_items_per_cycle = cycle_amount/components_per_work_item;
-    unsigned long  components_per_cycle = cycle_amount*components_per_work_item;
+    unsigned long  number_of_work_items_per_cycle = 8092 * work_group_size ;
+    unsigned long components_per_cycle = number_of_work_items_per_cycle * components_per_work_item;
     
     
     
     
     // printf("start_index: %ld end_index: %ld\n\n", start_index, end_index);
     
-    for (int cycle = 0; cycle <= amount_of_numbers_to_add_including_zero / cycle_amount; cycle ++) {
+    for (int cycle = 0; cycle <= amount_of_numbers_to_add_including_zero / components_per_cycle; cycle ++) {
         
         /* OpenCL structures */
         cl_device_id device;
@@ -171,7 +170,7 @@ int main(int argc, char *argv[]) {
         size_t local_size, global_size;
         
         /* Data and buffers */
-       
+        
         
         // printf("number_of_work_items_per_cycle: %ld \n\n", number_of_work_items_per_cycle);
         
@@ -193,7 +192,7 @@ int main(int argc, char *argv[]) {
         // printf("\nDebug B.1\n");
         
         for(i=0; i<components_per_cycle; i++) {
-            data[i] = (i + cycle*cycle_amount < amount_of_numbers_to_add_including_zero ? i + cycle*cycle_amount : 0.0f);
+            data[i] = (i + cycle*components_per_cycle < amount_of_numbers_to_add_including_zero ? i + cycle*components_per_cycle : 0.0f);
         }
         
         
@@ -201,7 +200,7 @@ int main(int argc, char *argv[]) {
         /* Create device and context */
         device = create_device();
         
-//        print_device_info(device);
+        //        print_device_info(device);
         
         context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
         if(err < 0) {
@@ -225,7 +224,7 @@ int main(int argc, char *argv[]) {
         // printf("\nnum_groups: %i\n", num_groups);
         
         input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
-                                      CL_MEM_COPY_HOST_PTR, cycle_amount * sizeof(unsigned long ), data, &err);
+                                      CL_MEM_COPY_HOST_PTR, components_per_cycle * sizeof(unsigned long ), data, &err);
         sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
                                     CL_MEM_COPY_HOST_PTR, num_groups * sizeof(unsigned long ), sum, &err);
         if(err < 0) {
@@ -299,9 +298,9 @@ int main(int argc, char *argv[]) {
     // printf("\nComputed sum = %ld\n", final_sum);
     // printf("Checksum = %ld\n", actual_sum);
     if(final_sum != actual_sum)
-          printf("Check failed.\n");
+        printf("Check failed.\n");
     else
-          printf("Check passed.\n");
+        printf("Check passed.\n");
     
     
     FILE * Output;
